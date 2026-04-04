@@ -17,6 +17,10 @@ Looking for ComfyUI nodes? Find them [here](https://github.com/adieyal/comfyui-d
    * [Online resources](#online-resources)
    * [Installation](#installation)
    * [Configuration](#configuration)
+   * [New features](#new-features)
+      * [Conditional if/else and switch/case](#conditional-ifelse-and-switchcase)
+      * [Prefix and suffix on variant output](#prefix-and-suffix-on-variant-output)
+      * [Comma squashing](#comma-squashing)
    * [Troubleshooting](#troubleshooting)
    * [Compatible Scripts](#compatible-scripts)
    * [Template syntax](#template-syntax)
@@ -123,6 +127,59 @@ Template: I love __seasons__ better than __seasons__
 ```
 
 > Note: this additional "Template" section is not displayed in the generate page but will be available in PNG Info (or image browser, if you have that extension installed).
+
+## New features
+
+### Conditional if/else and switch/case
+
+Conditionals allow prompt content to change based on variable values — no settings or configuration required. The syntax uses `?{...}` (or `@if{...}`):
+
+```
+${style=!{cinematic|anime|oil painting}}
+portrait, ?{${style} == cinematic $$ dramatic lighting, lens flare $$ soft studio lighting}
+```
+
+Switch/case matches a variable against a list of labels, with an optional `_` default:
+
+```
+?{${style} $$ cinematic: lens flare | anime: cel shading | _: natural light}
+```
+
+Append `&` to a label to fall through to the next case:
+
+```
+?{${color} $$ red&: fire | orange&: warm colors | yellow: bright | _: neutral}
+# color == red  →  fire, warm colors, bright
+```
+
+Comparison operators: `==`, `!=`, `>`, `<`, `>=`, `<=` (numeric — both sides cast to float), `empty`, `!empty`.
+
+See the [full syntax guide](docs/SYNTAX.md#conditionals) for complete documentation.
+
+### Prefix and suffix on variant output
+
+Add `p=` (prefix) and `s=` (suffix) parameters to a variant to wrap its output. No settings required — purely prompt syntax. Primarily useful for Stable Diffusion prompt scheduling:
+
+```
+{1$$p=[$$s=]$$a dog|a cat}                      →  [a dog]  or  [a cat]
+{2$$:$$p=[$$s=:0.5]$$oil painting|watercolor}   →  [oil painting:watercolor:0.5]
+high quality portrait, {1$$p=[detailed:$$s=:0.8]$$sharp eyes|soft eyes}
+→  high quality portrait, [detailed:sharp eyes:0.8]
+```
+
+If the variant produces no output (bound of 0), the prefix and suffix are omitted entirely.
+
+See the [full syntax guide](docs/SYNTAX.md#prefix-and-suffix) for details.
+
+### Comma squashing
+
+When variants produce no output, adjacent commas in the surrounding prompt are automatically merged:
+
+```
+thing, {0$$a|b}, other_thing   →  thing, other_thing   (not  thing, , other_thing)
+```
+
+This is **on by default**. It can be disabled in the WebUI Settings under **Dynamic Prompts → Squash duplicate commas**.
 
 ## Troubleshooting
 If you encounter an issue with Dynamic Prompts, follow these steps to resolve the problem:

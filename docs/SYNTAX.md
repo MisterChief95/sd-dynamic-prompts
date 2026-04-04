@@ -11,6 +11,7 @@ This guide will walk you through the template language used to generate dynamic 
       * [Range of Options](#range-of-options)
          * [Omitting Bounds](#omitting-bounds)
          * [Limitations](#limitations)
+      * [Prefix and Suffix](#prefix-and-suffix)
    * [Wildcards](#wildcards)
       * [Basic Syntax](#basic-syntax-1)
       * [Wildcards in Variants](#wildcards-in-variants)
@@ -26,6 +27,12 @@ This guide will walk you through the template language used to generate dynamic 
    * [Variables](#variables)
       * [Immediate Evaluation](#immediate-evaluation)
       * [Non-immediate Evaluation](#non-immediate-evaluation)
+   * [Conditionals](#conditionals)
+      * [If/Else](#ifelse)
+      * [Comparison Operators](#comparison-operators)
+      * [Switch/Case](#switchcase)
+      * [Switch with Fall-through](#switch-with-fall-through)
+   * [Comma Squashing](#comma-squashing)
    * [Parameterized Templates](#parameterized-templates)
       * [Basic Syntax](#basic-syntax-3)
       * [Default values](#default-values)
@@ -130,6 +137,52 @@ If you request more options than values in the variant, you will only get as man
 
 ```
 p{4$$chocolate|vanilla|strawberry} == chocolate, vanilla, strawberry
+```
+
+### Prefix and Suffix
+
+You can wrap variant output in a prefix and/or suffix using the `p=` and `s=` named parameters. These are placed in the bound expression section, each terminated by `$$`:
+
+```
+{bound $$ separator $$ p=PREFIX $$ s=SUFFIX $$ options}
+```
+
+Either or both may be omitted, and their order does not matter:
+
+```
+{1$$p=[$$s=]$$thingA|thingB}           → [thingA]  or  [thingB]
+{2$$:$$p=[$$s=:0.5]$$doA|doB}          → [doA:doB:0.5]
+{2$$ and $$p=[from: $$s=]$$A|B}        → [from: A and B]
+{1$$p=START: $$A|B}                     → START: A  or  START: B
+{1$$s= :tag$$A|B}                       → A :tag   or  B :tag
+```
+
+If the separator is omitted, the default `,` is used:
+
+```
+{1$$p=[$$s=]$$A|B}    # same as {1$$,$$p=[$$s=]$$A|B}
+```
+
+**Empty output skips affixes** — if the variant produces no output (e.g. a bound of 0), the prefix and suffix are not emitted:
+
+```
+{0$$p=[$$s=]$$A|B}   →  (empty string, not [])
+```
+
+This is especially useful for Stable Diffusion prompt scheduling syntax:
+
+```
+# Animate between two subjects
+{1$$p=[$$s=]$$a dog|a cat}
+→  [a dog]  or  [a cat]
+
+# Cross-fade between two styles at step 0.5
+{2$$:$$p=[$$s=:0.5]$$oil painting|watercolor}
+→  [oil painting:watercolor:0.5]
+
+# Schedule a detail into the late diffusion steps
+high quality portrait, {1$$p=[detailed:$$s=:0.8]$$sharp eyes|soft eyes}
+→  high quality portrait, [detailed:sharp eyes:0.8]
 ```
 
 ## Wildcards
@@ -424,6 +477,77 @@ you can use a variable instead:
 ${person_description={blond|redhead|brunette}, {green|blue|brown|hazel} eyes, {tall|average|short}}
 A ${person_description} man and a ${person_description} woman
 ```
+
+## Conditionals
+
+Conditionals let you include or exclude parts of a prompt based on variable values. The default syntax is `?{...}`. An alternative `@if{...}` is also accepted.
+
+### If/Else
+
+```
+?{${variable} == value $$ output if true $$ output if false}
+?{${variable} == value $$ output if true}     # else branch is optional (produces empty string)
+@if{${variable} != other $$ output}           # alternative syntax
+```
+
+**Unary checks:**
+
+```
+?{${variable} empty $$ show this when variable is empty}
+?{${variable} !empty $$ show this when variable is not empty}
+```
+
+**Typical usage with variables:**
+
+```
+${style=!{cinematic|anime|oil painting}}
+portrait, ?{${style} == cinematic $$ dramatic lighting, lens flare $$ soft studio lighting}
+```
+
+### Comparison Operators
+
+| Operator | Type | Description |
+|---|---|---|
+| `==` | String | Equality |
+| `!=` | String | Inequality |
+| `>` | Numeric | Greater than — casts both sides to `float`, raises an error if non-numeric |
+| `<` | Numeric | Less than |
+| `>=` | Numeric | Greater or equal |
+| `<=` | Numeric | Less or equal |
+| `empty` | Unary | True if variable resolves to empty string |
+| `!empty` | Unary | True if variable resolves to non-empty string |
+
+### Switch/Case
+
+Match a variable against a list of labeled cases. Use `_` as the default/fallback label:
+
+```
+?{${variable} $$ red: fire prompt | blue: water prompt | _: default prompt}
+```
+
+### Switch with Fall-through
+
+Append `&` to a case label to fall through to the next case. Output from all matched cases is joined with `, `:
+
+```
+?{${color} $$ red&: fire | orange&: warm colors | yellow: bright | _: neutral}
+```
+
+* `color == red` → `fire, warm colors, bright` (falls through `red&` → `orange&` → stops at `yellow`)
+* `color == orange` → `warm colors, bright`
+* `color == yellow` → `bright`
+* `color == green` → `neutral`
+
+## Comma Squashing
+
+When a variant or conditional produces no output, adjacent commas in the surrounding prompt are automatically merged into one:
+
+```
+thing, {0$$a|b}, other_thing   →  thing, other_thing   (not  thing, , other_thing)
+a, {0$$x|y}, {0$$x|y}, b      →  a, b
+```
+
+This is on by default and requires no configuration. It can be disabled in the WebUI Settings under **Dynamic Prompts → Squash duplicate commas**.
 
 ## Parameterized Templates
 
