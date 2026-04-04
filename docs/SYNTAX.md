@@ -478,6 +478,28 @@ ${person_description={blond|redhead|brunette}, {green|blue|brown|hazel} eyes, {t
 A ${person_description} man and a ${person_description} woman
 ```
 
+### Assignment Inside Variant Branches
+
+You can assign a variable inside a variant branch. Whichever branch is chosen sets the variable for the rest of the prompt:
+
+```
+{cat ${col=orange}|dog ${col=brown}}, ${col} fur
+```
+
+This will produce either `cat, orange fur` or `dog, brown fur` — the variable always matches the chosen branch. This also works with if/else and switch branches:
+
+```
+${time=day}?{${time} == day $$ ${label=sunny} $$ ${label=dark}}, ${label} sky
+```
+
+With combinatorial sampling, each branch is explored independently, so all combinations are generated with their respective variable values:
+
+```
+{red ${shape=circle}|blue ${shape=square}} on a ${shape} canvas
+```
+
+Produces: `red on a circle canvas` and `blue on a square canvas`.
+
 ## Conditionals
 
 Conditionals let you include or exclude parts of a prompt based on variable values. The default syntax is `?{...}`. An alternative `@if{...}` is also accepted.
