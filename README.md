@@ -1,4 +1,7 @@
 # Stable Diffusion Dynamic Prompts extension
+
+> **Note: This is a fork of [adieyal/sd-dynamic-prompts](https://github.com/adieyal/sd-dynamic-prompts)** developed to ship new features from the forked [dynamicprompts](https://github.com/adieyal/dynamicprompts) library: conditional logic, prefix/suffix on variant output, comma squashing, and variable assignments in branches. See [Recent Changes](#recent-changes) below.
+
 A custom extension for [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) that implements an expressive template language for random or combinatorial prompt generation along with features to support deep wildcard directory structures.
 
 Looking for ComfyUI nodes? Find them [here](https://github.com/adieyal/comfyui-dynamicprompts).
@@ -17,6 +20,7 @@ Looking for ComfyUI nodes? Find them [here](https://github.com/adieyal/comfyui-d
    * [Online resources](#online-resources)
    * [Installation](#installation)
    * [Configuration](#configuration)
+   * [Recent Changes](#recent-changes)
    * [New features](#new-features)
       * [Conditional if/else and switch/case](#conditional-ifelse-and-switchcase)
       * [Prefix and suffix on variant output](#prefix-and-suffix-on-variant-output)
@@ -127,6 +131,19 @@ Template: I love __seasons__ better than __seasons__
 ```
 
 > Note: this additional "Template" section is not displayed in the generate page but will be available in PNG Info (or image browser, if you have that extension installed).
+
+## Recent Changes
+
+This fork ships the following additions in v2.18.0, built on the forked dynamicprompts library (v0.32.0–v0.33.1):
+
+**v2.18.0 (dynamicprompts v0.33.1)**
+- Fix: Variable assignments inside switch cases now correctly bubble up to the outer sequence.
+- Fix: Variable lookup is deferred until generator iteration, preventing `KeyError` for variables not yet assigned.
+- Fix: Switch case parser now tolerates leading/trailing commas and whitespace at case boundaries.
+- Variable assignments are now allowed inside variant branches, if/else branches, and switch cases. Variables assigned in the chosen branch are visible to subsequent tokens in the same sequence (e.g. `{cat ${col=orange}|dog ${col=brown}}, ${col} fur`).
+- Repeated commas produced by empty sampling results are automatically squashed.
+- Prefix and suffix parameters (`p=`, `s=`) on variant output allow wrapping selected values (useful for Stable Diffusion prompt scheduling syntax).
+- Conditional if/else and switch/case logic for variable-driven prompt branching.
 
 ## New features
 
