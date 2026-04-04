@@ -369,6 +369,7 @@ class Script(scripts.Script):
             return p
 
         ignore_whitespace = opts.dp_ignore_whitespace
+        squash_commas = getattr(opts, "dp_squash_commas", True)
 
         self._prompt_writer.enabled = opts.dp_write_prompts_to_file
         self._limit_jinja_prompts = opts.dp_limit_jinja_prompts
@@ -431,6 +432,7 @@ class Script(scripts.Script):
                     ignore_whitespace=ignore_whitespace,
                     parser_config=parser_config,
                 )
+                .set_squash_commas(squash_commas)
                 .set_is_feeling_lucky(is_feeling_lucky)
                 .set_is_attention_grabber(
                     is_attention_grabber,
