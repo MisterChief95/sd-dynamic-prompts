@@ -7,6 +7,14 @@ from sd_dynamic_prompts.helpers import load_magicprompt_models
 def on_ui_settings():
     section = "dynamicprompts", "Dynamic Prompts"
     shared.opts.add_option(
+        key="dp_squash_commas",
+        info=shared.OptionInfo(
+            True,
+            label="Squash duplicate commas: When variants produce no output, merge adjacent commas into one",
+            section=section,
+        ),
+    )
+    shared.opts.add_option(
         key="dp_ignore_whitespace",
         info=shared.OptionInfo(
             False,

@@ -24,6 +24,7 @@ class GeneratorBuilder:
         wildcard_manager,
         parser_config=default_parser_config,
         ignore_whitespace=False,
+        squash_commas=True,
     ):
         self._wildcard_manager = wildcard_manager
 
@@ -44,6 +45,7 @@ class GeneratorBuilder:
         self._max_attention = 1.5
         self._device = 0
         self._ignore_whitespace = ignore_whitespace
+        self._squash_commas = squash_commas
         self._unlink_seed_from_prompt = False
         self._seed = -1
         self._context = None
@@ -120,6 +122,10 @@ class GeneratorBuilder:
         self._magic_batch_size = batch_size
         self._device = device
 
+        return self
+
+    def set_squash_commas(self, squash_commas: bool):
+        self._squash_commas = squash_commas
         return self
 
     def set_unlink_seed_from_prompt(self, unlink_seed_from_prompt=True):
@@ -199,6 +205,7 @@ class GeneratorBuilder:
                 self._wildcard_manager,
                 parser_config=self._parser_config,
                 ignore_whitespace=self._ignore_whitespace,
+                squash_commas=self._squash_commas,
             )
             return BatchedCombinatorialPromptGenerator(
                 prompt_generator,
@@ -210,6 +217,7 @@ class GeneratorBuilder:
             parser_config=self._parser_config,
             unlink_seed_from_prompt=self._unlink_seed_from_prompt,
             ignore_whitespace=self._ignore_whitespace,
+            squash_commas=self._squash_commas,
         )
 
     def create_jinja_generator(self, p) -> PromptGenerator:
