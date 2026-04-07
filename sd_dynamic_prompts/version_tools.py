@@ -109,9 +109,45 @@ def get_dynamicprompts_install_result() -> InstallResult:
     raise RuntimeError("dynamicprompts requirement not found")
 
 
+# The forked dynamicprompts library is not published on PyPI.
+# We build and install it directly from the GitHub repository.
+_DYNAMICPROMPTS_GIT_URL = "git+https://github.com/MisterChief95/dynamicprompts.git"
+
+
+def _install_dynamicprompts_from_git(force: bool = False) -> bool:
+    """
+    Build and install the forked dynamicprompts library from GitHub.
+
+    Returns True if installation was attempted, False if skipped.
+    """
+    try:
+        dp_result = get_dynamicprompts_install_result()
+        if not force and dp_result.correct:
+            return False
+    except RuntimeError:
+        pass  # requirement entry not found — install anyway
+
+    command = [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        _DYNAMICPROMPTS_GIT_URL,
+    ]
+    print(f"sd-dynamic-prompts installer: installing forked dynamicprompts from GitHub")
+    print(f"sd-dynamic-prompts installer: running {shlex.join(command)}")
+    subprocess.check_call(command)
+    return True
+
+
 def install_requirements(force=False) -> None:
     """
     Invoke pip to install the requirements for the extension.
+
+    The forked dynamicprompts library is installed directly from GitHub
+    (https://github.com/MisterChief95/dynamicprompts) rather than PyPI.
+    All other requirements are installed from pyproject.toml as usual.
     """
     try:
         from launch import args
@@ -124,13 +160,18 @@ def install_requirements(force=False) -> None:
     except ImportError:
         pass
 
-    requirements_to_install = [
+    # Install the forked dynamicprompts from GitHub first.
+    _install_dynamicprompts_from_git(force=force)
+
+    # Install remaining (non-dynamicprompts) requirements from pyproject.toml.
+    other_requirements = [
         str(ires.requirement)
         for ires in get_requirements_install_results()
-        if (force or not ires.correct)
+        if not ires.requirement.name.lower().startswith("dynamicprompts")
+        and (force or not ires.correct)
     ]
 
-    if not requirements_to_install:
+    if not other_requirements:
         return
 
     command = [
@@ -138,7 +179,7 @@ def install_requirements(force=False) -> None:
         "-m",
         "pip",
         "install",
-        *requirements_to_install,
+        *other_requirements,
     ]
     print(f"sd-dynamic-prompts installer: running {shlex.join(command)}")
     subprocess.check_call(command)

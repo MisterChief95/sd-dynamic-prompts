@@ -1,6 +1,6 @@
 # Stable Diffusion Dynamic Prompts extension
 
-> **Note: This is a fork of [adieyal/sd-dynamic-prompts](https://github.com/adieyal/sd-dynamic-prompts)** developed to ship new features from the forked [dynamicprompts](https://github.com/adieyal/dynamicprompts) library: conditional logic, prefix/suffix on variant output, comma squashing, and variable assignments in branches. See [Recent Changes](#recent-changes) below.
+> **Note: This is a fork of [adieyal/sd-dynamic-prompts](https://github.com/adieyal/sd-dynamic-prompts)** developed to ship new features from the forked [dynamicprompts](https://github.com/MisterChief95/dynamicprompts) library: conditional logic, prefix/suffix on variant output, comma squashing, variable assignments in branches, and boolean variable type. See [Recent Changes](#recent-changes) below.
 
 A custom extension for [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) that implements an expressive template language for random or combinatorial prompt generation along with features to support deep wildcard directory structures.
 
@@ -22,6 +22,7 @@ Looking for ComfyUI nodes? Find them [here](https://github.com/adieyal/comfyui-d
    * [Configuration](#configuration)
    * [Recent Changes](#recent-changes)
    * [New features](#new-features)
+      * [Boolean variable type](#boolean-variable-type)
       * [Conditional if/else and switch/case](#conditional-ifelse-and-switchcase)
       * [Prefix and suffix on variant output](#prefix-and-suffix-on-variant-output)
       * [Comma squashing](#comma-squashing)
@@ -134,7 +135,10 @@ Template: I love __seasons__ better than __seasons__
 
 ## Recent Changes
 
-This fork ships the following additions in v2.18.0, built on the forked dynamicprompts library (v0.32.0–v0.33.1):
+This fork ships the following additions, built on the forked [dynamicprompts](https://github.com/MisterChief95/dynamicprompts) library. The installer now pulls that library directly from GitHub.
+
+**v2.19.0 (dynamicprompts v0.34.0)**
+- Boolean variable type: declare with `${name=!bool}` (defaults to false), check with `?{${name} $$ then $$ else}`, negate with `?{!${name} $$ then}`. Blank/null variables evaluate as false in boolean context.
 
 **v2.18.0 (dynamicprompts v0.33.1)**
 - Fix: Variable assignments inside switch cases now correctly bubble up to the outer sequence.
@@ -146,6 +150,31 @@ This fork ships the following additions in v2.18.0, built on the forked dynamicp
 - Conditional if/else and switch/case logic for variable-driven prompt branching.
 
 ## New features
+
+### Boolean variable type
+
+Declare a boolean variable with `${name=!bool}` (defaults to `false`). Use it in a conditional without an explicit `== true` comparison:
+
+```
+${nsfw=!bool}
+portrait, ?{${nsfw} $$ explicit content $$ tasteful portrait}
+```
+
+Negate with `!`:
+
+```
+${safe=!bool}
+?{!${safe} $$ add safety tags}
+```
+
+Blank or unset variables are treated as `false` in boolean context. Any value other than `true` (case-insensitive) is also `false`. Setting a variable to `true` or `True` or `TRUE` all evaluate as truthy:
+
+```
+${flag=true}?{${flag} $$ yes $$ no}   →  yes
+${flag=false}?{${flag} $$ yes $$ no}  →  no
+```
+
+This is fully backward compatible — `${x=bool}` (no `!`) still stores the literal string `"bool"`.
 
 ### Conditional if/else and switch/case
 
