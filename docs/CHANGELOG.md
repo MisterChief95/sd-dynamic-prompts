@@ -1,3 +1,7 @@
+- 2.20.2 Upgraded to dynamicprompts v0.36.2. Fix: multi-selector output (e.g. `{2$$a|b}`) now correctly produces `a, b` instead of `a,b`. Fix: resolved `TypeError` on unhashable `VariantCommand` objects in combinatorial sampling.
+- 2.20.1 Upgraded to dynamicprompts v0.36.1 with performance improvements: faster weighted selection, O(1) command lookup, improved wildcard cache eviction, and combined dedup+sort pass.
+- 2.20.0 Upgraded to dynamicprompts v0.36.0. Added variable bounds in variant syntax (e.g. `{${n}$$a|b|c}`) and SD WebUI bracket passthrough.
+- 2.19.1 Upgraded to dynamicprompts v0.35.0. `${name=bool}` now declares a random boolean re-sampled each generation; `${name=!bool}` samples once and reuses across the batch.
 - 2.19.0 Upgraded to dynamicprompts v0.34.0 (boolean variable type). Install now pulls forked dynamicprompts directly from GitHub (MisterChief95/dynamicprompts)
 - 2.18.0 Upgraded to dynamicprompts v0.33.1 for features and bug fixes
 - 2.17.1 Upgraded to dynamicprompts v0.30.2 for a bugfix.
