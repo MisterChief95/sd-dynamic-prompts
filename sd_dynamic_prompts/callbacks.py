@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
 from dynamicprompts.wildcards import WildcardManager
-from modules import script_callbacks
+from modules import script_callbacks, shared
 from modules.generation_parameters_copypaste import parse_generation_parameters
 from modules.script_callbacks import ImageSaveParams
 
@@ -15,6 +16,28 @@ from sd_dynamic_prompts.settings import on_ui_settings
 from sd_dynamic_prompts.wildcards_tab import initialize as initialize_wildcards_tab
 
 logger = logging.getLogger(__name__)
+
+
+_ESCAPE_MAP = {
+    "n": "\n",
+    "t": "\t",
+    "r": "\r",
+    "\\": "\\",
+}
+
+
+def _unescape_prompt(text: str) -> str:
+    """Decode common escape sequences (\\n, \\t, \\r, \\\\) in a prompt string.
+
+    Only the sequences listed in _ESCAPE_MAP are expanded; all other backslash
+    sequences are left untouched so that dynamic-prompts syntax (e.g. wildcard
+    paths with backslashes) is not corrupted.
+    """
+
+    def replace(m: re.Match) -> str:
+        return _ESCAPE_MAP.get(m.group(1), m.group(0))
+
+    return re.sub(r"\\(.)", replace, text)
 
 
 def register_prompt_writer(prompt_writer: PromptWriter) -> None:
@@ -41,6 +64,14 @@ def register_on_infotext_pasted() -> None:
             new_parameters["Negative prompt"] = new_parameters["Prompt"]
             new_parameters["Prompt"] = parameters["Prompt"]
         parameters.update(new_parameters)
+
+        if getattr(shared.opts, "dp_paste_template_as_prompt", False):
+            if "Template" in parameters and parameters["Template"]:
+                parameters["Prompt"] = _unescape_prompt(parameters["Template"])
+            if "Negative Template" in parameters and parameters["Negative Template"]:
+                parameters["Negative prompt"] = _unescape_prompt(
+                    parameters["Negative Template"]
+                )
 
     script_callbacks.on_infotext_pasted(on_infotext_pasted)
 

@@ -129,3 +129,12 @@ def on_ui_settings():
             section=section,
         ),
     )
+
+    shared.opts.add_option(
+        key="dp_paste_template_as_prompt",
+        info=shared.OptionInfo(
+            False,
+            label="Restore template on paste: When pasting infotext, replace the prompt/negative prompt with the saved template (with escape sequences like \\n expanded) so you can re-run generation with the original template",
+            section=section,
+        ),
+    )
