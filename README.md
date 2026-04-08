@@ -137,6 +137,9 @@ Template: I love __seasons__ better than __seasons__
 
 This fork ships the following additions, built on the forked [dynamicprompts](https://github.com/MisterChief95/dynamicprompts) library. The installer now pulls that library directly from GitHub.
 
+**v2.20.1 (dynamicprompts v0.36.1)**
+- Performance: Several parsing and sampling hot-path optimizations (O(1) command lookup, faster weighted selection, smarter wildcard cache eviction, combined dedup+sort pass).
+
 **v2.19.0 (dynamicprompts v0.34.0)**
 - Boolean variable type: declare with `${name=!bool}` (defaults to false), check with `?{${name} $$ then $$ else}`, negate with `?{!${name} $$ then}`. Blank/null variables evaluate as false in boolean context.
 
