@@ -1,3 +1,4 @@
+- 2.20.3 Upgraded to dynamicprompts v0.36.3. Fix: multi-word comparison operands in conditionals (e.g. `== golden hour`) no longer truncate or raise `ParseException`. Performance: parse results are now LRU-cached — repeated generation from the same template is significantly faster.
 - 2.20.2 Upgraded to dynamicprompts v0.36.2. Fix: multi-selector output (e.g. `{2$$a|b}`) now correctly produces `a, b` instead of `a,b`. Fix: resolved `TypeError` on unhashable `VariantCommand` objects in combinatorial sampling.
 - 2.20.1 Upgraded to dynamicprompts v0.36.1 with performance improvements: faster weighted selection, O(1) command lookup, improved wildcard cache eviction, and combined dedup+sort pass.
 - 2.20.0 Upgraded to dynamicprompts v0.36.0. Added variable bounds in variant syntax (e.g. `{${n}$$a|b|c}`) and SD WebUI bracket passthrough.
