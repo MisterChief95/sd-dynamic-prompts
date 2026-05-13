@@ -7,8 +7,11 @@ from typing import Any
 
 from dynamicprompts.wildcards import WildcardManager
 from modules import script_callbacks, shared
-from modules.generation_parameters_copypaste import parse_generation_parameters
 from modules.script_callbacks import ImageSaveParams
+try:
+    from modules.generation_parameters_copypaste import parse_generation_parameters
+except ImportError:
+    from modules.infotext_utils import parse_generation_parameters
 
 from sd_dynamic_prompts.pnginfo_saver import strip_template_info
 from sd_dynamic_prompts.prompt_writer import PromptWriter
