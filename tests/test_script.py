@@ -43,6 +43,9 @@ def test_script(
     assert isinstance(processing.all_negative_prompts, list)
     assert isinstance(processing.all_hr_prompts, list)
     assert isinstance(processing.all_hr_negative_prompts, list)
+    assert processing.main_prompt == processing.all_prompts[0]
+    assert processing.main_negative_prompt == processing.all_negative_prompts[0]
+    assert "{" not in processing.main_prompt
 
     if is_combinatorial:
         assert processing.all_prompts == ["red ball", "green ball", "blue ball"]
