@@ -135,7 +135,7 @@ def _install_dynamicprompts_from_git(force: bool = False) -> bool:
         "--upgrade",
         _DYNAMICPROMPTS_GIT_URL,
     ]
-    print(f"sd-dynamic-prompts installer: installing forked dynamicprompts from GitHub")
+    print("sd-dynamic-prompts installer: installing forked dynamicprompts from GitHub")
     print(f"sd-dynamic-prompts installer: running {shlex.join(command)}")
     subprocess.check_call(command)
     return True
