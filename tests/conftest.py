@@ -26,18 +26,22 @@ class MockProcessing:
     all_hr_prompts: list[str] = dataclasses.field(default_factory=list)
     all_negative_prompts: list[str] = dataclasses.field(default_factory=list)
     all_hr_negative_prompts: list[str] = dataclasses.field(default_factory=list)
+    main_prompt: str = ""
+    main_negative_prompt: str = ""
 
     def set_prompt_for_test(self, prompt):
         self.prompt = prompt
         self.hr_prompt = prompt
         self.all_prompts = [prompt] * self.n_iter * self.batch_size
         self.all_hr_prompts = self.all_prompts.copy()
+        self.main_prompt = prompt
 
     def set_negative_prompt_for_test(self, negative_prompt):
         self.negative_prompt = negative_prompt
         self.hr_negative_prompt = negative_prompt
         self.all_negative_prompts = [negative_prompt] * self.n_iter * self.batch_size
         self.all_hr_negative_prompts = self.all_negative_prompts.copy()
+        self.main_negative_prompt = negative_prompt
 
 
 @pytest.fixture

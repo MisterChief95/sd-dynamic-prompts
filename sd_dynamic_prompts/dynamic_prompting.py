@@ -526,6 +526,15 @@ class Script(scripts.Script):
 
         p.all_prompts = all_prompts
         p.all_negative_prompts = all_negative_prompts
+
+        # Forge stores the prompt used for batch-grid infotext before extensions run.
+        # Keep it in sync with the generated prompts instead of leaving the raw
+        # dynamic prompt template in the grid metadata.
+        if hasattr(p, "main_prompt"):
+            p.main_prompt = all_prompts[0]
+        if hasattr(p, "main_negative_prompt"):
+            p.main_negative_prompt = all_negative_prompts[0]
+
         if no_image_generation:
             logger.debug("No image generation requested - exiting")
             # Need a minimum of batch size images to avoid errors

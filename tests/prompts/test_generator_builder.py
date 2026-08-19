@@ -28,4 +28,4 @@ def test_frozen_generator(tmp_path):
         True,
     )
     gen = gb.create_generator()
-    assert type(gen) == FrozenPromptGenerator
+    assert type(gen) is FrozenPromptGenerator
