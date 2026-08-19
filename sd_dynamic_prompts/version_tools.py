@@ -67,7 +67,7 @@ class InstallResult:
 
     @property
     def pip_install_command(self) -> str:
-        return f"pip install {self.specifier_str}"
+        return f'pip install "{get_pip_requirement(self.requirement)}"'
 
     def raise_if_incorrect(self) -> None:
         message = self.message
@@ -109,23 +109,59 @@ def get_dynamicprompts_install_result() -> InstallResult:
     raise RuntimeError("dynamicprompts requirement not found")
 
 
-# The forked dynamicprompts library is not published on PyPI.
-# We build and install it directly from the GitHub repository.
-_DYNAMICPROMPTS_GIT_URL = "git+https://github.com/MisterChief95/dynamicprompts.git"
+# The forked dynamicprompts library is not published on PyPI. Wheels are
+# published as GitHub release assets, tagged `v<version>`, by the fork's
+# build_release_wheels workflow.
+_DYNAMICPROMPTS_WHEEL_URL_TEMPLATE = (
+    "https://github.com/MisterChief95/dynamicprompts/releases/download/"
+    "v{version}/dynamicprompts-{version}-py3-none-any.whl"
+)
 
 
-def _install_dynamicprompts_from_git(force: bool = False) -> bool:
+def get_pinned_version(req: Requirement) -> str | None:
     """
-    Build and install the forked dynamicprompts library from GitHub.
+    Get the exact version a requirement is pinned to with `==`, if any.
+    """
+    for spec in req.specifier:
+        if spec.operator == "==":
+            return spec.version
+    return None
+
+
+def get_pip_requirement(req: Requirement) -> str:
+    """
+    Render a requirement as a single `pip install` argument.
+
+    dynamicprompts becomes a PEP 508 direct reference to the forked wheel,
+    since the fork is not on PyPI. Everything else is rendered as-is.
+    """
+    if req.name.lower() != "dynamicprompts":
+        return str(req)
+    version = get_pinned_version(req)
+    if not version:
+        raise RuntimeError(
+            f"The dynamicprompts requirement ({req}) must be pinned with `==` "
+            f"so the forked wheel URL can be derived from it.",
+        )
+    extras = f"[{','.join(sorted(req.extras))}]" if req.extras else ""
+    url = _DYNAMICPROMPTS_WHEEL_URL_TEMPLATE.format(version=version)
+    return f"{req.name}{extras} @ {url}"
+
+
+def _install_dynamicprompts(force: bool = False) -> bool:
+    """
+    Install the forked dynamicprompts library from its GitHub release wheel.
 
     Returns True if installation was attempted, False if skipped.
     """
     try:
         dp_result = get_dynamicprompts_install_result()
-        if not force and dp_result.correct:
-            return False
     except RuntimeError:
-        pass  # requirement entry not found — install anyway
+        logger.warning("dynamicprompts requirement not found; skipping install")
+        return False
+
+    if not force and dp_result.correct:
+        return False
 
     command = [
         sys.executable,
@@ -133,9 +169,9 @@ def _install_dynamicprompts_from_git(force: bool = False) -> bool:
         "pip",
         "install",
         "--upgrade",
-        _DYNAMICPROMPTS_GIT_URL,
+        get_pip_requirement(dp_result.requirement),
     ]
-    print("sd-dynamic-prompts installer: installing forked dynamicprompts from GitHub")
+    print("sd-dynamic-prompts installer: installing forked dynamicprompts")
     print(f"sd-dynamic-prompts installer: running {shlex.join(command)}")
     subprocess.check_call(command)
     return True
@@ -145,7 +181,7 @@ def install_requirements(force=False) -> None:
     """
     Invoke pip to install the requirements for the extension.
 
-    The forked dynamicprompts library is installed directly from GitHub
+    The forked dynamicprompts library is installed from a GitHub release wheel
     (https://github.com/MisterChief95/dynamicprompts) rather than PyPI.
     All other requirements are installed from pyproject.toml as usual.
     """
@@ -160,12 +196,12 @@ def install_requirements(force=False) -> None:
     except ImportError:
         pass
 
-    # Install the forked dynamicprompts from GitHub first.
-    _install_dynamicprompts_from_git(force=force)
+    # Install the forked dynamicprompts from its release wheel first.
+    _install_dynamicprompts(force=force)
 
     # Install remaining (non-dynamicprompts) requirements from pyproject.toml.
     other_requirements = [
-        str(ires.requirement)
+        get_pip_requirement(ires.requirement)
         for ires in get_requirements_install_results()
         if not ires.requirement.name.lower().startswith("dynamicprompts")
         and (force or not ires.correct)
