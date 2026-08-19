@@ -12,13 +12,20 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pre-commit/action@v3.0.1
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.1
+
+      - name: Run Ruff Check
+        uses: astral-sh/ruff-action@v4.1.0
+
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
