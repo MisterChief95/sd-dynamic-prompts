@@ -240,13 +240,15 @@ If you encounter an issue with Dynamic Prompts, follow these steps to resolve th
 3. If the above step does not work, you might need to manually update the library using the following command:
 
 ```shell
-python -m pip install -U dynamicprompts[attentiongrabber,magicprompt]
+python -m pip install -U "dynamicprompts[attentiongrabber,magicprompt] @ https://github.com/MisterChief95/dynamicprompts/releases/download/v0.36.3/dynamicprompts-0.36.3-py3-none-any.whl"
 ```
+
+This fork of the library is not published on PyPI — it is installed from a GitHub release wheel, so the full URL is required.
 
 4. Restart the webui and check. If the webui uses a different python binary, find the correct path to the python binary and run:
 
 ```shell
-/path/to/python/binary/python -m pip install -U dynamicprompts[attentiongrabber,magicprompt]
+/path/to/python/binary/python -m pip install -U "dynamicprompts[attentiongrabber,magicprompt] @ https://github.com/MisterChief95/dynamicprompts/releases/download/v0.36.3/dynamicprompts-0.36.3-py3-none-any.whl"
 ```
 
 5. If the Wildcard UI does not show, it could be due to an outdated library version. Check for errors in the terminal and update the library as described in step 3.
