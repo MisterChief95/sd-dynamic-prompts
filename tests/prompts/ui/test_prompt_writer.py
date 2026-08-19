@@ -1,4 +1,4 @@
-from tempfile import NamedTemporaryFile
+from pathlib import Path
 
 import pytest
 
@@ -23,15 +23,18 @@ def populated_prompt_writer() -> PromptWriter:
 
 
 class TestPromptWriter:
-    def _write_to_file(self, prompt_writer: PromptWriter) -> None:
-        with NamedTemporaryFile("w", encoding="utf-8", delete=True) as f:
-            prompt_writer.write_prompts(f.name)
+    def _write_to_file(self, prompt_writer: PromptWriter, path: Path) -> None:
+        # The file is pre-created so a skipped write leaves it empty rather than absent.
+        path.touch()
+        prompt_writer.write_prompts(path)
 
-    def _checks_writes_empty_file(self, prompt_writer: PromptWriter) -> bool:
-        with NamedTemporaryFile("w", encoding="utf-8", delete=True) as f:
-            prompt_writer.write_prompts(f.name)
-            output = open(f.name).read()
-            return output == ""
+    def _checks_writes_empty_file(
+        self,
+        prompt_writer: PromptWriter,
+        path: Path,
+    ) -> bool:
+        self._write_to_file(prompt_writer, path)
+        return path.read_text(encoding="utf-8") == ""
 
     def test_default_disabled(self, prompt_writer: PromptWriter) -> None:
         assert prompt_writer.enabled is False
@@ -60,35 +63,56 @@ class TestPromptWriter:
     def test_doesnt_write_when_disabled(
         self,
         populated_prompt_writer: PromptWriter,
+        tmp_path: Path,
     ) -> None:
         populated_prompt_writer.enabled = False
-        assert self._checks_writes_empty_file(populated_prompt_writer)
+        assert self._checks_writes_empty_file(
+            populated_prompt_writer,
+            tmp_path / "prompts.csv",
+        )
 
-    def test_write_prompts(self, populated_prompt_writer: PromptWriter) -> None:
+    def test_write_prompts(
+        self,
+        populated_prompt_writer: PromptWriter,
+        tmp_path: Path,
+    ) -> None:
         populated_prompt_writer.enabled = True
 
-        with NamedTemporaryFile("w", encoding="utf-8", delete=True) as f:
-            populated_prompt_writer.write_prompts(f.name)
-            with open(f.name) as f2:
-                lines = f2.read().splitlines()
+        path = tmp_path / "prompts.csv"
+        populated_prompt_writer.write_prompts(path)
+        lines = path.read_text(encoding="utf-8").splitlines()
 
-                assert lines == [
-                    "positive_prompt,negative_prompt",
-                    "positive,negative",
-                    "positive1,negative1",
-                    "positive2,negative2",
-                ]
+        assert lines == [
+            "positive_prompt,negative_prompt",
+            "positive,negative",
+            "positive1,negative1",
+            "positive2,negative2",
+        ]
 
-    def test_only_write_once(self, populated_prompt_writer: PromptWriter) -> None:
+    def test_only_write_once(
+        self,
+        populated_prompt_writer: PromptWriter,
+        tmp_path: Path,
+    ) -> None:
         populated_prompt_writer.enabled = True
 
-        self._write_to_file(populated_prompt_writer)
-        assert self._checks_writes_empty_file(populated_prompt_writer)
+        self._write_to_file(populated_prompt_writer, tmp_path / "first.csv")
+        assert self._checks_writes_empty_file(
+            populated_prompt_writer,
+            tmp_path / "second.csv",
+        )
 
-    def test_writes_after_reset(self, populated_prompt_writer: PromptWriter) -> None:
+    def test_writes_after_reset(
+        self,
+        populated_prompt_writer: PromptWriter,
+        tmp_path: Path,
+    ) -> None:
         populated_prompt_writer.enabled = True
-        self._write_to_file(populated_prompt_writer)
+        self._write_to_file(populated_prompt_writer, tmp_path / "first.csv")
 
         populated_prompt_writer.reset()
 
-        assert not self._checks_writes_empty_file(populated_prompt_writer)
+        assert not self._checks_writes_empty_file(
+            populated_prompt_writer,
+            tmp_path / "second.csv",
+        )

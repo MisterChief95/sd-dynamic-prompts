@@ -48,7 +48,12 @@ class PromptWriter:
         self._already_saved = True
 
         path = Path(path)
-        with path.open("w", encoding=constants.DEFAULT_ENCODING, errors="ignore") as f:
+        with path.open(
+            "w",
+            encoding=constants.DEFAULT_ENCODING,
+            errors="ignore",
+            newline="",  # csv writes its own line terminators; see csv module docs
+        ) as f:
             writer = csv.writer(f)
             writer.writerow(["positive_prompt", "negative_prompt"])
             writer.writerow([self._positive_template, self._negative_template])
